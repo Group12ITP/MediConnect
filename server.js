@@ -1,10 +1,5 @@
-//iaL2kF1B9uLr2zcu
-
-const express = require('express');
-const mongoose = require('mongoose');
-
-const app = express();
 require('dotenv').config();
+const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const errorHandler = require('./Middleware/errorHandler');
@@ -19,6 +14,7 @@ if (!fs.existsSync(uploadsDir)) {
   console.log('Created uploads/slips directory');
 }
 
+const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -42,17 +38,7 @@ app.use((req, res, next) => {
 
 app.use(errorHandler);
 
-//Middleware
-app.use(express.json());
-
-
-
-
-
-//Connect to MongoDB
-mongoose.connect("mongodb+srv://Admin:iaL2kF1B9uLr2zcu@mediconnectcluster.03lembh.mongodb.net/")
-.then(() => console.log("Connected to MongoDB"))
-.then(() => {
-  app.listen(5000);
-})
-.catch((err) => console.log(err));
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
