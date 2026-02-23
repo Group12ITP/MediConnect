@@ -18,10 +18,8 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use('/api/doctors', require('./Routes/doctorRoutes'));
+
 app.use('/api/appointments', require('./Routes/appointmentRoutes'));
-app.use('/api/queue-sessions', require('./Routes/queueRoutes'));
-app.use('/api/patients/:patientId/reports', require('./Routes/reportRoutes'));
 
 // Error Handler
 const errorHandler = require('./Middleware/errorMiddleware');
@@ -30,5 +28,5 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
