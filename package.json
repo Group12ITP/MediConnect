@@ -1,0 +1,27 @@
+{
+  "name": "mediconnect",
+  "version": "1.0.0",
+  "description": "A telemedicine platform connecting patients with healthcare providers in underserved areas under Healthcare Access.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kasunsanjeewa2002sanju/MediConnect.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Kasunsanjeewa2002sanju/MediConnect/issues"
+  },
+  "homepage": "https://github.com/Kasunsanjeewa2002sanju/MediConnect#readme",
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

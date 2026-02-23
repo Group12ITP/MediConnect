@@ -1,0 +1,113 @@
+const AppointmentService = require('../Services/AppointmentService');
+const Appointment = require('../Models/Appointment');
+const { generateICS } = require('../Utils/icsUtil');
+
+exports.createAppointment = async (req, res, next) => {
+    try {
+        // Add patientId from auth user if not provided (security)
+        if (req.user.role === 'PATIENT' || req.user.role === 'patient') {
+            req.body.patientId = req.user.id;
+        }
+
+        const appointment = await AppointmentService.createAppointment(req.body);
+
+        res.status(201).json({
+            success: true,
+            data: appointment
+        });
+    } catch (err) {
+        if (err.message === 'Slot already booked') {
+            return res.status(409).json({ success: false, message: err.message });
+        }
+        next(err);
+    }
+};
+
+exports.getAppointments = async (req, res, next) => {
+    try {
+        let query = {};
+
+        if (req.user.role === 'PATIENT' || req.user.role === 'patient') {
+            query.patientId = req.user.id;
+        } else if (req.user.role === 'DOCTOR' || req.user.role === 'NURSE') {
+            // Can filter by doctorId via query param
+            if (req.query.doctorId) query.doctorId = req.query.doctorId;
+            if (req.query.date) query.date = req.query.date;
+        }
+
+        const appointments = await AppointmentService.getAppointments(query);
+
+        res.status(200).json({
+            success: true,
+            count: appointments.length,
+            data: appointments
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.getAppointment = async (req, res, next) => {
+    try {
+        const appointment = await Appointment.findById(req.params.id);
+
+        if (!appointment) {
+            return res.status(404).json({ success: false, message: 'Appointment not found' });
+        }
+
+        // Ownership check
+        if (req.user.role === 'PATIENT' && appointment.patientId.toString() !== req.user.id) {
+            return res.status(403).json({ success: false, message: 'Not authorized' });
+        }
+
+        res.status(200).json({ success: true, data: appointment });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.updateAppointment = async (req, res, next) => {
+    try {
+        let appointment = await Appointment.findById(req.params.id);
+
+        if (!appointment) {
+            return res.status(404).json({ success: false, message: 'Appointment not found' });
+        }
+
+        // Authorization logic for updates
+        if (req.user.role === 'PATIENT') {
+            if (appointment.patientId.toString() !== req.user.id) {
+                return res.status(403).json({ success: false, message: 'Not authorized' });
+            }
+            // Patient can only cancel or reschedule (re-booking logic separate usually, but maybe status update here)
+            // Ideally reschedule is a separate action creating new appt
+            if (req.body.status === 'CANCELLED') {
+                // Check cancellation cutoff time policy here
+            }
+        }
+
+        appointment = await Appointment.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+            runValidators: true
+        });
+
+        res.status(200).json({ success: true, data: appointment });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.downloadICS = async (req, res, next) => {
+    try {
+        const appointment = await Appointment.findById(req.params.id);
+        if (!appointment) return res.status(404).json({ success: false, message: 'Appointment not found' });
+
+        const icsContent = generateICS(appointment);
+
+        res.setHeader('Content-Type', 'text/calendar');
+        res.setHeader('Content-Disposition', `attachment; filename=appointment-${appointment._id}.ics`);
+        res.send(icsContent);
+    } catch (err) {
+        next(err);
+    }
+};
