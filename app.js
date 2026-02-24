@@ -6,6 +6,7 @@ const authRoutes = require("./Routes/AuthRoutes");
 const profileRoutes = require("./Routes/Profileroutes");
 const availabilityRoutes = require("./Routes/Availabilityroutes");
 const searchRoutes = require("./Routes/Searchroutes");
+const exportRoutes = require("./Routes/ExportRoutes");
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use("/api/doctors/auth", authRoutes);
 app.use("/api/doctors/profile", profileRoutes);
 app.use("/api/doctors/availability", availabilityRoutes);
 app.use("/api/doctors/search", searchRoutes);
+app.use("/api/doctors/export", exportRoutes);
 
 //Connect to MongoDB
 mongoose.connect("mongodb+srv://Admin:iaL2kF1B9uLr2zcu@mediconnectcluster.03lembh.mongodb.net/")
