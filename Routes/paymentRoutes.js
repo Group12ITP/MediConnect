@@ -8,7 +8,7 @@ const {
   rejectPayment,
 } = require('../Controllers/paymentController');
 const { protect, adminOnly } = require('../Middleware/auth');
-const upload = require('../Middleware/upload');
+const upload = require('../Middleware/uploadSlip');
 
 router.post('/upload', protect, upload.single('slipImage'), uploadPaymentSlip);
 router.get('/', protect, adminOnly, getAllPayments);
