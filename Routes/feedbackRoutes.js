@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { submitFeedback, getAllFeedback } = require('../Controllers/feedbackController');
-const { protect, adminOnly } = require('../middleware/auth');
+const { protect, adminOnly } = require('../Middleware/auth');
 
 // Authenticated users can submit feedback
 router.post('/', protect, submitFeedback);

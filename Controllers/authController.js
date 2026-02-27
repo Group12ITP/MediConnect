@@ -35,7 +35,13 @@ exports.register = async (req, res, next) => {
       token,
     });
   } catch (error) {
-    next(error);
+    if (typeof next === 'function') {
+      return next(error);
+    }
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Internal Server Error',
+    });
   }
 };
 
@@ -75,6 +81,12 @@ exports.login = async (req, res, next) => {
       token,
     });
   } catch (error) {
-    next(error);
+    if (typeof next === 'function') {
+      return next(error);
+    }
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Internal Server Error',
+    });
   }
 };

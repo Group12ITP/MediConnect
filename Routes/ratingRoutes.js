@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { submitRating, getAllRatings } = require('../Controllers/ratingController');
-const { protect, adminOnly } = require('../middleware/auth');
+const { protect, adminOnly } = require('../Middleware/auth');
 
 // Authenticated users can submit their own ratings
 router.post('/', protect, submitRating);

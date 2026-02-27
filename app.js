@@ -1,17 +1,23 @@
-//iaL2kF1B9uLr2zcu
-
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
-
-const app = express();
-require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
 const errorHandler = require('./Middleware/errorHandler');
 
 const authRoutes = require('./Routes/authRoutes');
 const userRoutes = require('./Routes/userRoutes');
+const feedbackRoutes = require('./Routes/feedbackRoutes');
+const ratingRoutes = require('./Routes/ratingRoutes');
+const paymentRoutes = require('./Routes/paymentRoutes');
 
+const PORT = process.env.PORT || 5000;
+const MONGO_URI = process.env.MONGO_URI;
+if (!MONGO_URI) {
+  throw new Error('MONGO_URI is missing. Create a .env file with MONGO_URI and JWT_SECRET.');
+}
+
+const app = express();
 
 const uploadsDir = path.join(__dirname, 'uploads', 'slips');
 if (!fs.existsSync(uploadsDir)) {
@@ -27,6 +33,9 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/feedback', feedbackRoutes);
+app.use('/api/ratings', ratingRoutes);
+app.use('/api/payments', paymentRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Telemedicine API is running' });
@@ -42,17 +51,15 @@ app.use((req, res, next) => {
 
 app.use(errorHandler);
 
-//Middleware
-app.use(express.json());
-
-
-
-
-
-//Connect to MongoDB
-mongoose.connect("mongodb+srv://Admin:iaL2kF1B9uLr2zcu@mediconnectcluster.03lembh.mongodb.net/")
-.then(() => console.log("Connected to MongoDB"))
-.then(() => {
-  app.listen(5000);
-})
-.catch((err) => console.log(err));
+mongoose
+  .connect(MONGO_URI)
+  .then(() => console.log('Connected to MongoDB'))
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });

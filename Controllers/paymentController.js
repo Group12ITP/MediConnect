@@ -27,7 +27,13 @@ exports.uploadPaymentSlip = async (req, res, next) => {
       data: populated,
     });
   } catch (error) {
-    next(error);
+    if (typeof next === 'function') {
+      return next(error);
+    }
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Internal Server Error',
+    });
   }
 };
 
@@ -42,7 +48,13 @@ exports.getAllPayments = async (req, res, next) => {
       data: payments,
     });
   } catch (error) {
-    next(error);
+    if (typeof next === 'function') {
+      return next(error);
+    }
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Internal Server Error',
+    });
   }
 };
 
@@ -55,7 +67,13 @@ exports.getMyPayments = async (req, res, next) => {
       data: payments,
     });
   } catch (error) {
-    next(error);
+    if (typeof next === 'function') {
+      return next(error);
+    }
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Internal Server Error',
+    });
   }
 };
 
@@ -73,7 +91,13 @@ exports.approvePayment = async (req, res, next) => {
       data: populated,
     });
   } catch (error) {
-    next(error);
+    if (typeof next === 'function') {
+      return next(error);
+    }
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Internal Server Error',
+    });
   }
 };
 
@@ -91,6 +115,12 @@ exports.rejectPayment = async (req, res, next) => {
       data: populated,
     });
   } catch (error) {
-    next(error);
+    if (typeof next === 'function') {
+      return next(error);
+    }
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Internal Server Error',
+    });
   }
 };

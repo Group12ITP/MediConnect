@@ -6,7 +6,13 @@ exports.getAllUsers = async (req, res, next) => {
     const users = await User.find().select('-password');
     res.json({ success: true, count: users.length, data: users });
   } catch (error) {
-    next(error);
+    if (typeof next === 'function') {
+      return next(error);
+    }
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Internal Server Error',
+    });
   }
 };
 
@@ -19,7 +25,13 @@ exports.getUserById = async (req, res, next) => {
     }
     res.json({ success: true, data: user });
   } catch (error) {
-    next(error);
+    if (typeof next === 'function') {
+      return next(error);
+    }
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Internal Server Error',
+    });
   }
 };
 
@@ -32,7 +44,13 @@ exports.deleteUserById = async (req, res, next) => {
     }
     res.json({ success: true, message: 'User deleted successfully' });
   } catch (error) {
-    next(error);
+    if (typeof next === 'function') {
+      return next(error);
+    }
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Internal Server Error',
+    });
   }
 };
 
@@ -42,7 +60,13 @@ exports.getMe = async (req, res, next) => {
     const user = await User.findById(req.user._id).select('-password');
     res.json({ success: true, data: user });
   } catch (error) {
-    next(error);
+    if (typeof next === 'function') {
+      return next(error);
+    }
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Internal Server Error',
+    });
   }
 };
 
@@ -71,7 +95,13 @@ exports.updateMe = async (req, res, next) => {
 
     res.json({ success: true, data: user });
   } catch (error) {
-    next(error);
+    if (typeof next === 'function') {
+      return next(error);
+    }
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Internal Server Error',
+    });
   }
 };
 
@@ -81,7 +111,13 @@ exports.deleteMe = async (req, res, next) => {
     await User.findByIdAndDelete(req.user._id);
     res.json({ success: true, message: 'Account deleted successfully' });
   } catch (error) {
-    next(error);
+    if (typeof next === 'function') {
+      return next(error);
+    }
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Internal Server Error',
+    });
   }
 };
 

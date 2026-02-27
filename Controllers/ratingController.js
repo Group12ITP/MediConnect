@@ -27,7 +27,13 @@ exports.submitRating = async (req, res, next) => {
       data: populated,
     });
   } catch (error) {
-    next(error);
+    if (typeof next === 'function') {
+      return next(error);
+    }
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Internal Server Error',
+    });
   }
 };
 
@@ -42,6 +48,12 @@ exports.getAllRatings = async (req, res, next) => {
       data: ratings,
     });
   } catch (error) {
-    next(error);
+    if (typeof next === 'function') {
+      return next(error);
+    }
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Internal Server Error',
+    });
   }
 };

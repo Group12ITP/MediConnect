@@ -6,7 +6,9 @@ const errorHandler = require('./Middleware/errorHandler');
 
 const authRoutes = require('./Routes/authRoutes');
 const userRoutes = require('./Routes/userRoutes');
-
+const feedbackRoutes = require('./Routes/feedbackRoutes');
+const ratingRoutes = require('./Routes/ratingRoutes');
+const paymentRoutes = require('./Routes/paymentRoutes');
 
 const uploadsDir = path.join(__dirname, 'uploads', 'slips');
 if (!fs.existsSync(uploadsDir)) {
@@ -23,6 +25,9 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/feedback', feedbackRoutes);
+app.use('/api/ratings', ratingRoutes);
+app.use('/api/payments', paymentRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Telemedicine API is running' });

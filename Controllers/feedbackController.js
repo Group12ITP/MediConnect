@@ -19,7 +19,13 @@ exports.submitFeedback = async (req, res, next) => {
       data: populated,
     });
   } catch (error) {
-    next(error);
+    if (typeof next === 'function') {
+      return next(error);
+    }
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Internal Server Error',
+    });
   }
 };
 
@@ -34,6 +40,12 @@ exports.getAllFeedback = async (req, res, next) => {
       data: feedbacks,
     });
   } catch (error) {
-    next(error);
+    if (typeof next === 'function') {
+      return next(error);
+    }
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Internal Server Error',
+    });
   }
 };
