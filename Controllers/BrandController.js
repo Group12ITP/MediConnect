@@ -13,7 +13,7 @@ const {
   getAdverseEventCount,
   getDrugLabelInfo,
   getNdcInfo,
-} = require("../Utils/openFDA");
+} = require("../Utils/Openfda");
 const { scoreBrand, rankBrands } = require("../Utils/brandScoring");
 
 // ── Helper: Validation errors ───────────────────────────────────

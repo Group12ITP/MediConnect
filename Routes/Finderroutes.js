@@ -21,7 +21,7 @@ const {
   finderValidation,
   quickFinderValidation,
   prescriptionIdParam,
-} = require("../middleware/finderValidators");
+} = require("../Middleware/findervalidators");
 
 // ── All routes require authentication ───────────────────────────
 router.use(protect, requireApproved);
