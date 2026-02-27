@@ -1,11 +1,15 @@
 const { validationResult } = require("express-validator");
 const Pharmacist = require("../Models/Pharmacist");
-const { generateToken, generateResetToken, verifyToken } = require("../utils/jwtHelper");
+const {
+  generateToken,
+  generateResetToken,
+  verifyToken,
+} = require("../Utils/jwtHelper");
 const {
   sendPharmacistWelcomeEmail,
   sendPharmacistApprovalEmail,
   sendPasswordResetEmail,
-} = require("../utils/emailService");
+} = require("../Utils/emailService");
 
 // ── Helper: Validation errors ───────────────────────────────────
 const handleValidationErrors = (req, res) => {
@@ -22,18 +26,18 @@ const handleValidationErrors = (req, res) => {
 
 // ── Helper: Safe pharmacist response ───────────────────────────
 const sanitize = (p) => ({
-  id:             p._id,
-  pharmacistId:   p.pharmacistId,
-  firstName:      p.firstName,
-  lastName:       p.lastName,
-  email:          p.email,
-  role:           p.role,
-  licenseNumber:  p.licenseNumber,
-  phone:          p.phone,
-  pharmacy:       p.pharmacy,
-  isApproved:     p.isApproved,
-  isActive:       p.isActive,
-  createdAt:      p.createdAt,
+  id: p._id,
+  pharmacistId: p.pharmacistId,
+  firstName: p.firstName,
+  lastName: p.lastName,
+  email: p.email,
+  role: p.role,
+  licenseNumber: p.licenseNumber,
+  phone: p.phone,
+  pharmacy: p.pharmacy,
+  isApproved: p.isApproved,
+  isActive: p.isActive,
+  createdAt: p.createdAt,
 });
 
 // ───────────────────────────────────────────────────────────────
@@ -46,7 +50,8 @@ const register = async (req, res) => {
   if (err) return;
 
   try {
-    const { firstName, lastName, email, password, licenseNumber, phone } = req.body;
+    const { firstName, lastName, email, password, licenseNumber, phone } =
+      req.body;
 
     const existing = await Pharmacist.findOne({
       $or: [{ email }, { licenseNumber }],
@@ -61,17 +66,23 @@ const register = async (req, res) => {
     }
 
     const pharmacist = await Pharmacist.create({
-      firstName, lastName, email, password, licenseNumber, phone,
+      firstName,
+      lastName,
+      email,
+      password,
+      licenseNumber,
+      phone,
     });
 
     sendPharmacistWelcomeEmail(
       pharmacist.email,
-      `${pharmacist.firstName} ${pharmacist.lastName}`
+      `${pharmacist.firstName} ${pharmacist.lastName}`,
     );
 
     return res.status(201).json({
       success: true,
-      message: "Registration successful. Your account is pending admin approval.",
+      message:
+        "Registration successful. Your account is pending admin approval.",
       data: sanitize(pharmacist),
     });
   } catch (error) {
@@ -92,20 +103,28 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const pharmacist = await Pharmacist.findOne({ email })
-      .select("+password +tokenVersion");
+    const pharmacist = await Pharmacist.findOne({ email }).select(
+      "+password +tokenVersion",
+    );
 
     if (!pharmacist) {
-      return res.status(401).json({ success: false, message: "Invalid email or password." });
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid email or password." });
     }
 
     const isMatch = await pharmacist.comparePassword(password);
     if (!isMatch) {
-      return res.status(401).json({ success: false, message: "Invalid email or password." });
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid email or password." });
     }
 
     if (!pharmacist.isActive) {
-      return res.status(403).json({ success: false, message: "Your account has been deactivated." });
+      return res.status(403).json({
+        success: false,
+        message: "Your account has been deactivated.",
+      });
     }
 
     if (!pharmacist.isApproved) {
@@ -116,9 +135,9 @@ const login = async (req, res) => {
     }
 
     const token = generateToken({
-      id:           pharmacist._id,
+      id: pharmacist._id,
       pharmacistId: pharmacist.pharmacistId,
-      role:         "pharmacist",
+      role: "pharmacist",
       tokenVersion: pharmacist.tokenVersion,
     });
 
@@ -156,8 +175,12 @@ const getMe = async (req, res) => {
 // ───────────────────────────────────────────────────────────────
 const logoutAll = async (req, res) => {
   try {
-    await Pharmacist.findByIdAndUpdate(req.user._id, { $inc: { tokenVersion: 1 } });
-    return res.status(200).json({ success: true, message: "Logged out from all devices." });
+    await Pharmacist.findByIdAndUpdate(req.user._id, {
+      $inc: { tokenVersion: 1 },
+    });
+    return res
+      .status(200)
+      .json({ success: true, message: "Logged out from all devices." });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Server error." });
   }
@@ -178,17 +201,21 @@ const forgotPassword = async (req, res) => {
 
     const generic = {
       success: true,
-      message: "If an account with that email exists, a reset link has been sent.",
+      message:
+        "If an account with that email exists, a reset link has been sent.",
     };
 
     if (!pharmacist) return res.status(200).json(generic);
 
-    const resetToken = generateResetToken({ id: pharmacist._id, role: "pharmacist" });
+    const resetToken = generateResetToken({
+      id: pharmacist._id,
+      role: "pharmacist",
+    });
     await sendPasswordResetEmail(
       pharmacist.email,
       `${pharmacist.firstName} ${pharmacist.lastName}`,
       resetToken,
-      "pharmacist"
+      "pharmacist",
     );
 
     return res.status(200).json(generic);
@@ -214,19 +241,27 @@ const resetPassword = async (req, res) => {
     try {
       decoded = verifyToken(token);
     } catch {
-      return res.status(400).json({ success: false, message: "Invalid or expired reset token." });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid or expired reset token." });
     }
 
-    const pharmacist = await Pharmacist.findById(decoded.id).select("+tokenVersion");
+    const pharmacist = await Pharmacist.findById(decoded.id).select(
+      "+tokenVersion",
+    );
     if (!pharmacist) {
-      return res.status(400).json({ success: false, message: "Invalid reset token." });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid reset token." });
     }
 
     pharmacist.password = newPassword;
     pharmacist.tokenVersion += 1;
     await pharmacist.save();
 
-    return res.status(200).json({ success: true, message: "Password reset successfully." });
+    return res
+      .status(200)
+      .json({ success: true, message: "Password reset successfully." });
   } catch (error) {
     console.error("Pharmacist resetPassword error:", error);
     return res.status(500).json({ success: false, message: "Server error." });
@@ -244,12 +279,15 @@ const changePassword = async (req, res) => {
 
   try {
     const { currentPassword, newPassword } = req.body;
-    const pharmacist = await Pharmacist.findById(req.user._id)
-      .select("+password +tokenVersion");
+    const pharmacist = await Pharmacist.findById(req.user._id).select(
+      "+password +tokenVersion",
+    );
 
     const isMatch = await pharmacist.comparePassword(currentPassword);
     if (!isMatch) {
-      return res.status(400).json({ success: false, message: "Current password is incorrect." });
+      return res
+        .status(400)
+        .json({ success: false, message: "Current password is incorrect." });
     }
 
     pharmacist.password = newPassword;
@@ -257,9 +295,9 @@ const changePassword = async (req, res) => {
     await pharmacist.save();
 
     const newToken = generateToken({
-      id:           pharmacist._id,
+      id: pharmacist._id,
       pharmacistId: pharmacist.pharmacistId,
-      role:         "pharmacist",
+      role: "pharmacist",
       tokenVersion: pharmacist.tokenVersion,
     });
 
@@ -284,11 +322,15 @@ const approvePharmacist = async (req, res) => {
     const pharmacist = await Pharmacist.findById(req.params.id);
 
     if (!pharmacist) {
-      return res.status(404).json({ success: false, message: "Pharmacist not found." });
+      return res
+        .status(404)
+        .json({ success: false, message: "Pharmacist not found." });
     }
 
     if (pharmacist.isApproved) {
-      return res.status(400).json({ success: false, message: "Pharmacist is already approved." });
+      return res
+        .status(400)
+        .json({ success: false, message: "Pharmacist is already approved." });
     }
 
     pharmacist.isApproved = true;
@@ -296,7 +338,7 @@ const approvePharmacist = async (req, res) => {
 
     sendPharmacistApprovalEmail(
       pharmacist.email,
-      `${pharmacist.firstName} ${pharmacist.lastName}`
+      `${pharmacist.firstName} ${pharmacist.lastName}`,
     );
 
     return res.status(200).json({

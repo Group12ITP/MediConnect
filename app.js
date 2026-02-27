@@ -11,7 +11,7 @@ const exportRoutes = require("./Routes/ExportRoutes");
 const app = express();
 const pharmacistRoutes = require("./Routes/Pharmacistroutes");
 const patientRoutes = require("./Routes/Patientroutes");
-
+const pharmacyRoutes = require("./Routes/Pharmacyroutes");
 
 //Middleware
 app.use(express.json());
@@ -23,6 +23,7 @@ app.use("/api/doctors/profile", profileRoutes);
 app.use("/api/doctors/availability", availabilityRoutes);
 app.use("/api/doctors/search", searchRoutes);
 app.use("/api/doctors/export", exportRoutes);
+app.use("/api/pharmacy/profile", pharmacyRoutes);
 
 //Connect to MongoDB
 mongoose

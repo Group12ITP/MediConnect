@@ -1,10 +1,14 @@
 const { validationResult } = require("express-validator");
 const Patient = require("../Models/Patient");
-const { generateToken, generateResetToken, verifyToken } = require("../utils/jwtHelper");
+const {
+  generateToken,
+  generateResetToken,
+  verifyToken,
+} = require("../Utils/jwtHelper");
 const {
   sendPatientWelcomeEmail,
   sendPasswordResetEmail,
-} = require("../utils/emailService");
+} = require("../Utils/emailService");
 
 // ── Helper: Validation errors ───────────────────────────────────
 const handleValidationErrors = (req, res) => {
@@ -21,20 +25,20 @@ const handleValidationErrors = (req, res) => {
 
 // ── Helper: Safe patient response ──────────────────────────────
 const sanitize = (p) => ({
-  id:              p._id,
-  patientId:       p.patientId,
-  firstName:       p.firstName,
-  lastName:        p.lastName,
-  email:           p.email,
-  role:            p.role,
-  phone:           p.phone,
-  dateOfBirth:     p.dateOfBirth,
-  gender:          p.gender,
-  bloodGroup:      p.bloodGroup,
-  address:         p.address,
-  assignedDoctor:  p.assignedDoctor,
-  isActive:        p.isActive,
-  createdAt:       p.createdAt,
+  id: p._id,
+  patientId: p.patientId,
+  firstName: p.firstName,
+  lastName: p.lastName,
+  email: p.email,
+  role: p.role,
+  phone: p.phone,
+  dateOfBirth: p.dateOfBirth,
+  gender: p.gender,
+  bloodGroup: p.bloodGroup,
+  address: p.address,
+  assignedDoctor: p.assignedDoctor,
+  isActive: p.isActive,
+  createdAt: p.createdAt,
 });
 
 // ───────────────────────────────────────────────────────────────
@@ -48,8 +52,14 @@ const register = async (req, res) => {
 
   try {
     const {
-      firstName, lastName, email, password,
-      phone, dateOfBirth, gender, bloodGroup,
+      firstName,
+      lastName,
+      email,
+      password,
+      phone,
+      dateOfBirth,
+      gender,
+      bloodGroup,
     } = req.body;
 
     const existing = await Patient.findOne({ email });
@@ -61,19 +71,25 @@ const register = async (req, res) => {
     }
 
     const patient = await Patient.create({
-      firstName, lastName, email, password,
-      phone, dateOfBirth, gender, bloodGroup,
+      firstName,
+      lastName,
+      email,
+      password,
+      phone,
+      dateOfBirth,
+      gender,
+      bloodGroup,
     });
 
     sendPatientWelcomeEmail(
       patient.email,
-      `${patient.firstName} ${patient.lastName}`
+      `${patient.firstName} ${patient.lastName}`,
     );
 
     const token = generateToken({
-      id:        patient._id,
+      id: patient._id,
       patientId: patient.patientId,
-      role:      "patient",
+      role: "patient",
       tokenVersion: patient.tokenVersion,
     });
 
@@ -101,26 +117,36 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const patient = await Patient.findOne({ email })
-      .select("+password +tokenVersion");
+    const patient = await Patient.findOne({ email }).select(
+      "+password +tokenVersion",
+    );
 
     if (!patient) {
-      return res.status(401).json({ success: false, message: "Invalid email or password." });
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid email or password." });
     }
 
     const isMatch = await patient.comparePassword(password);
     if (!isMatch) {
-      return res.status(401).json({ success: false, message: "Invalid email or password." });
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid email or password." });
     }
 
     if (!patient.isActive) {
-      return res.status(403).json({ success: false, message: "Your account has been deactivated." });
+      return res
+        .status(403)
+        .json({
+          success: false,
+          message: "Your account has been deactivated.",
+        });
     }
 
     const token = generateToken({
-      id:           patient._id,
-      patientId:    patient.patientId,
-      role:         "patient",
+      id: patient._id,
+      patientId: patient.patientId,
+      role: "patient",
       tokenVersion: patient.tokenVersion,
     });
 
@@ -143,8 +169,10 @@ const login = async (req, res) => {
 // ───────────────────────────────────────────────────────────────
 const getMe = async (req, res) => {
   try {
-    const patient = await Patient.findById(req.user._id)
-      .populate("assignedDoctor", "firstName lastName specialization doctorId");
+    const patient = await Patient.findById(req.user._id).populate(
+      "assignedDoctor",
+      "firstName lastName specialization doctorId",
+    );
     return res.status(200).json({ success: true, data: sanitize(patient) });
   } catch (error) {
     console.error("Patient getMe error:", error);
@@ -163,8 +191,13 @@ const updateMe = async (req, res) => {
 
   try {
     const allowedFields = [
-      "firstName", "lastName", "phone",
-      "dateOfBirth", "gender", "bloodGroup", "address",
+      "firstName",
+      "lastName",
+      "phone",
+      "dateOfBirth",
+      "gender",
+      "bloodGroup",
+      "address",
     ];
 
     const updates = {};
@@ -175,7 +208,7 @@ const updateMe = async (req, res) => {
     const patient = await Patient.findByIdAndUpdate(
       req.user._id,
       { $set: updates },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     ).populate("assignedDoctor", "firstName lastName specialization doctorId");
 
     return res.status(200).json({
@@ -196,8 +229,12 @@ const updateMe = async (req, res) => {
 // ───────────────────────────────────────────────────────────────
 const logoutAll = async (req, res) => {
   try {
-    await Patient.findByIdAndUpdate(req.user._id, { $inc: { tokenVersion: 1 } });
-    return res.status(200).json({ success: true, message: "Logged out from all devices." });
+    await Patient.findByIdAndUpdate(req.user._id, {
+      $inc: { tokenVersion: 1 },
+    });
+    return res
+      .status(200)
+      .json({ success: true, message: "Logged out from all devices." });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Server error." });
   }
@@ -218,7 +255,8 @@ const forgotPassword = async (req, res) => {
 
     const generic = {
       success: true,
-      message: "If an account with that email exists, a reset link has been sent.",
+      message:
+        "If an account with that email exists, a reset link has been sent.",
     };
 
     if (!patient) return res.status(200).json(generic);
@@ -228,7 +266,7 @@ const forgotPassword = async (req, res) => {
       patient.email,
       `${patient.firstName} ${patient.lastName}`,
       resetToken,
-      "patient"
+      "patient",
     );
 
     return res.status(200).json(generic);
@@ -254,19 +292,25 @@ const resetPassword = async (req, res) => {
     try {
       decoded = verifyToken(token);
     } catch {
-      return res.status(400).json({ success: false, message: "Invalid or expired reset token." });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid or expired reset token." });
     }
 
     const patient = await Patient.findById(decoded.id).select("+tokenVersion");
     if (!patient) {
-      return res.status(400).json({ success: false, message: "Invalid reset token." });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid reset token." });
     }
 
     patient.password = newPassword;
     patient.tokenVersion += 1;
     await patient.save();
 
-    return res.status(200).json({ success: true, message: "Password reset successfully." });
+    return res
+      .status(200)
+      .json({ success: true, message: "Password reset successfully." });
   } catch (error) {
     console.error("Patient resetPassword error:", error);
     return res.status(500).json({ success: false, message: "Server error." });
@@ -284,12 +328,15 @@ const changePassword = async (req, res) => {
 
   try {
     const { currentPassword, newPassword } = req.body;
-    const patient = await Patient.findById(req.user._id)
-      .select("+password +tokenVersion");
+    const patient = await Patient.findById(req.user._id).select(
+      "+password +tokenVersion",
+    );
 
     const isMatch = await patient.comparePassword(currentPassword);
     if (!isMatch) {
-      return res.status(400).json({ success: false, message: "Current password is incorrect." });
+      return res
+        .status(400)
+        .json({ success: false, message: "Current password is incorrect." });
     }
 
     patient.password = newPassword;
@@ -297,9 +344,9 @@ const changePassword = async (req, res) => {
     await patient.save();
 
     const newToken = generateToken({
-      id:           patient._id,
-      patientId:    patient.patientId,
-      role:         "patient",
+      id: patient._id,
+      patientId: patient.patientId,
+      role: "patient",
       tokenVersion: patient.tokenVersion,
     });
 
