@@ -5,4 +5,7 @@ const counterSchema = new mongoose.Schema({
   seq: { type: Number, default: 0 },
 });
 
-module.exports = mongoose.model("Counter", counterSchema);
+// Check if model exists before creating a new one
+const Counter = mongoose.models.Counter || mongoose.model("Counter", counterSchema);
+
+module.exports = Counter;
