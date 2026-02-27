@@ -11,13 +11,21 @@ const feedbackRoutes = require('./Routes/feedbackRoutes');
 const ratingRoutes = require('./Routes/ratingRoutes');
 const paymentRoutes = require('./Routes/paymentRoutes');
 
-const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI;
-if (!MONGO_URI) {
-  throw new Error('MONGO_URI is missing. Create a .env file with MONGO_URI and JWT_SECRET.');
-}
+//iaL2kF1B9uLr2zcu
+
+const authRoutes = require("./Routes/AuthRoutes");
+const profileRoutes = require("./Routes/Profileroutes");
+const availabilityRoutes = require("./Routes/Availabilityroutes");
+const searchRoutes = require("./Routes/Searchroutes");
+const exportRoutes = require("./Routes/ExportRoutes");
 
 const app = express();
+const pharmacistRoutes = require("./Routes/Pharmacistroutes");
+const patientRoutes = require("./Routes/Patientroutes");
+const pharmacyRoutes = require("./Routes/Pharmacyroutes");
+const inventoryRoutes = require("./Routes/Inventoryroutes");
+const finderRoutes = require("./Routes/Finderroutes");
+const brandRoutes = require("./Routes/Brandroutes");
 
 const uploadsDir = path.join(__dirname, 'uploads', 'slips');
 if (!fs.existsSync(uploadsDir)) {
@@ -51,15 +59,25 @@ app.use((req, res, next) => {
 
 app.use(errorHandler);
 
+app.use("/api/pharmacy/auth", pharmacistRoutes);
+app.use("/api/patients/auth", patientRoutes);
+app.use("/api/doctors/auth", authRoutes);
+app.use("/api/doctors/profile", profileRoutes);
+app.use("/api/doctors/availability", availabilityRoutes);
+app.use("/api/doctors/search", searchRoutes);
+app.use("/api/doctors/export", exportRoutes);
+app.use("/api/pharmacy/profile", pharmacyRoutes);
+app.use("/api/pharmacy/inventory", inventoryRoutes);
+app.use("/api/prescriptions", finderRoutes);
+app.use("/api/medicines", brandRoutes);
+
+//Connect to MongoDB
 mongoose
-  .connect(MONGO_URI)
-  .then(() => console.log('Connected to MongoDB'))
+  .connect(
+    "mongodb+srv://Admin:iaL2kF1B9uLr2zcu@mediconnectcluster.03lembh.mongodb.net/",
+  )
+  .then(() => console.log("Connected to MongoDB"))
   .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
+    app.listen(5000);
   })
-  .catch((err) => {
-    console.error(err);
-    process.exit(1);
-  });
+  .catch((err) => console.log(err));
