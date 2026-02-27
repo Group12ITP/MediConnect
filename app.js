@@ -1,41 +1,12 @@
-const express = require('express');
-const dotenv = require('dotenv');
 const cors = require('cors');
 const helmet = require('helmet');
-const connectDB = require('./Config/db');
-
-// Load env vars
-dotenv.config();
-
-// Connect to database
-connectDB();
-
-const app = express();
-
-// Middleware
-app.use(helmet());
-app.use(cors());
-app.use(express.json());
-
-// Routes
-
-app.use('/api/appointments', require('./Routes/appointmentRoutes'));
-
-// Error Handler
-const errorHandler = require('./Middleware/errorMiddleware');
-app.use(errorHandler);
-
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs');
 const errorHandler = require('./Middleware/errorHandler');
+const errorHandler2 = require('./Middleware/errorMiddleware');
 
 
 const authRoutes = require("./Routes/AuthRoutes");
@@ -53,6 +24,16 @@ const paymentRoutes = require('./Routes/paymentRoutes');
 
 
 const app = express();
+
+app.use(helmet());
+app.use(cors());
+
+
+
+
+// Error Handler
+
+app.use(errorHandler2);
 
 const uploadsDir = path.join(__dirname, 'uploads', 'slips');
 if (!fs.existsSync(uploadsDir)) {
@@ -91,6 +72,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/ratings', ratingRoutes);
 app.use('/api/payments', paymentRoutes);
+
+app.use('/api/appointments', require('./Routes/appointmentRoutes'));
 
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Telemedicine API is running' });
