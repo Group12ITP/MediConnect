@@ -1,5 +1,6 @@
 // Mock Authentication Middleware
 // In a real app, this would verify a JWT token
+
 exports.protect = (req, res, next) => {
     let token;
 
@@ -8,9 +9,6 @@ exports.protect = (req, res, next) => {
     }
 
     if (!token) {
-        // For development/demo ease, we might allow a fallback or just error out
-        // return res.status(401).json({ success: false, message: 'Not authorized to access this route' });
-
         // Mocking user based on headers for testing purposes if no token provided
         // This allows testing via Postman by just setting 'x-role' and 'x-user-id'
         if (req.headers['x-role']) {
@@ -20,6 +18,12 @@ exports.protect = (req, res, next) => {
             };
             return next();
         }
+
+        return res.status(401).json({
+            ok: false,
+            message: res.__('auth.unauthorized'),
+            locale: req.locale
+        });
     }
 
     // Mock decoding logic
@@ -34,7 +38,11 @@ exports.protect = (req, res, next) => {
         };
         next();
     } catch (err) {
-        return res.status(401).json({ success: false, message: 'Not authorized to access this route' });
+        return res.status(401).json({
+            ok: false,
+            message: res.__('auth.unauthorized'),
+            locale: req.locale
+        });
     }
 };
 
@@ -43,8 +51,9 @@ exports.authorize = (...roles) => {
     return (req, res, next) => {
         if (!req.user || !roles.includes(req.user.role)) {
             return res.status(403).json({
-                success: false,
-                message: `User role ${req.user ? req.user.role : 'unknown'} is not authorized to access this route`
+                ok: false,
+                message: res.__('auth.forbidden'),
+                locale: req.locale
             });
         }
         next();

@@ -1,5 +1,6 @@
 const ReportService = require('../Services/ReportService');
 const PatientReport = require('../Models/PatientReport');
+const { success } = require('../Utils/response');
 
 exports.createReport = async (req, res, next) => {
     try {
@@ -8,7 +9,7 @@ exports.createReport = async (req, res, next) => {
 
         const report = await ReportService.createReport(reportData);
 
-        res.status(201).json({ success: true, data: report });
+        return success(res, 'report.created', report, 201);
     } catch (err) {
         next(err);
     }
@@ -21,9 +22,6 @@ exports.getReports = async (req, res, next) => {
 
         let reports;
         if (latest === 'true') {
-            // Get one of each type, sorted by latest
-            // Aggregate or just find relevant types
-            // Simple approach: find all, sort desc, filter in code or separate queries
             const types = ['SUGAR', 'CHOLESTEROL', 'BLOOD_PRESSURE'];
             reports = [];
             for (const type of types) {
@@ -34,7 +32,13 @@ exports.getReports = async (req, res, next) => {
             reports = await PatientReport.find({ patientId }).sort({ createdAt: -1 });
         }
 
-        res.status(200).json({ success: true, count: reports.length, data: reports });
+        res.status(200).json({
+            ok: true,
+            message: res.__('common.success'),
+            count: reports.length,
+            data: reports,
+            locale: req.locale
+        });
     } catch (err) {
         next(err);
     }

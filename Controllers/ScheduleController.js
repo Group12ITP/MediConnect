@@ -1,5 +1,6 @@
 const ScheduleService = require('../Services/ScheduleService');
 const DoctorSchedule = require('../Models/DoctorSchedule');
+const { success, error } = require('../Utils/response');
 
 exports.getDoctorSlots = async (req, res, next) => {
     try {
@@ -7,15 +8,17 @@ exports.getDoctorSlots = async (req, res, next) => {
         const { doctorId } = req.params;
 
         if (!date) {
-            return res.status(400).json({ success: false, message: 'Date parameter is required' });
+            return error(res, 'schedule.date_required', 400);
         }
 
         const slots = await ScheduleService.getDoctorSlots(doctorId, date);
 
         res.status(200).json({
-            success: true,
+            ok: true,
+            message: res.__('common.success'),
             count: slots.length,
-            data: slots
+            data: slots,
+            locale: req.locale
         });
     } catch (err) {
         next(err);
@@ -27,22 +30,19 @@ exports.getDoctorSchedule = async (req, res, next) => {
         const schedule = await DoctorSchedule.findOne({ doctorId: req.params.doctorId });
 
         if (!schedule) {
-            return res.status(404).json({ success: false, message: 'Schedule not found' });
+            return error(res, 'schedule.not_found', 404);
         }
 
-        res.status(200).json({
-            success: true,
-            data: schedule
-        });
+        return success(res, 'common.success', schedule);
     } catch (err) {
         next(err);
     }
 };
 
-exports.createDoctorSchedule = async (req, res, next) => { // Helper for setup
+exports.createDoctorSchedule = async (req, res, next) => {
     try {
         const schedule = await DoctorSchedule.create(req.body);
-        res.status(201).json({ success: true, data: schedule });
+        return success(res, 'common.success', schedule, 201);
     } catch (err) {
         next(err);
     }

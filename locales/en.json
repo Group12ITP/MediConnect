@@ -1,0 +1,35 @@
+{
+  "common": {
+    "success": "Success",
+    "server_error": "Internal server error. Please try again later."
+  },
+  "auth": {
+    "unauthorized": "Not authorized to access this route",
+    "forbidden": "You do not have permission to perform this action"
+  },
+  "appointment": {
+    "created": "Appointment created successfully",
+    "updated": "Appointment updated successfully",
+    "deleted": "Appointment deleted successfully",
+    "not_found": "Appointment not found",
+    "slot_already_booked": "This time slot is already booked. Please choose another slot."
+  },
+  "queue": {
+    "session_started": "Queue session started",
+    "session_updated": "Queue session updated",
+    "session_ended": "Queue session ended",
+    "session_not_found": "Queue session not found"
+  },
+  "schedule": {
+    "not_found": "Schedule not found",
+    "date_required": "Date parameter is required"
+  },
+  "report": {
+    "created": "Health report created successfully",
+    "not_found": "Report not found"
+  },
+  "validation": {
+    "failed": "Validation failed",
+    "missing_fields": "Required fields are missing"
+  }
+}

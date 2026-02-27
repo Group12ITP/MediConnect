@@ -1,6 +1,7 @@
 const AppointmentService = require('../Services/AppointmentService');
 const Appointment = require('../Models/Appointment');
 const { generateICS } = require('../Utils/icsUtil');
+const { success, error } = require('../Utils/response');
 
 exports.createAppointment = async (req, res, next) => {
     try {
@@ -11,13 +12,10 @@ exports.createAppointment = async (req, res, next) => {
 
         const appointment = await AppointmentService.createAppointment(req.body);
 
-        res.status(201).json({
-            success: true,
-            data: appointment
-        });
+        return success(res, 'appointment.created', appointment, 201);
     } catch (err) {
         if (err.message === 'Slot already booked') {
-            return res.status(409).json({ success: false, message: err.message });
+            return error(res, 'appointment.slot_already_booked', 409);
         }
         next(err);
     }
@@ -30,7 +28,6 @@ exports.getAppointments = async (req, res, next) => {
         if (req.user.role === 'PATIENT' || req.user.role === 'patient') {
             query.patientId = req.user.id;
         } else if (req.user.role === 'DOCTOR' || req.user.role === 'NURSE') {
-            // Can filter by doctorId via query param
             if (req.query.doctorId) query.doctorId = req.query.doctorId;
             if (req.query.date) query.date = req.query.date;
         }
@@ -38,9 +35,11 @@ exports.getAppointments = async (req, res, next) => {
         const appointments = await AppointmentService.getAppointments(query);
 
         res.status(200).json({
-            success: true,
+            ok: true,
+            message: res.__('common.success'),
             count: appointments.length,
-            data: appointments
+            data: appointments,
+            locale: req.locale
         });
     } catch (err) {
         next(err);
@@ -52,15 +51,15 @@ exports.getAppointment = async (req, res, next) => {
         const appointment = await Appointment.findById(req.params.id);
 
         if (!appointment) {
-            return res.status(404).json({ success: false, message: 'Appointment not found' });
+            return error(res, 'appointment.not_found', 404);
         }
 
         // Ownership check
         if (req.user.role === 'PATIENT' && appointment.patientId.toString() !== req.user.id) {
-            return res.status(403).json({ success: false, message: 'Not authorized' });
+            return error(res, 'auth.forbidden', 403);
         }
 
-        res.status(200).json({ success: true, data: appointment });
+        return success(res, 'common.success', appointment);
     } catch (err) {
         next(err);
     }
@@ -71,16 +70,14 @@ exports.updateAppointment = async (req, res, next) => {
         let appointment = await Appointment.findById(req.params.id);
 
         if (!appointment) {
-            return res.status(404).json({ success: false, message: 'Appointment not found' });
+            return error(res, 'appointment.not_found', 404);
         }
 
         // Authorization logic for updates
         if (req.user.role === 'PATIENT') {
             if (appointment.patientId.toString() !== req.user.id) {
-                return res.status(403).json({ success: false, message: 'Not authorized' });
+                return error(res, 'auth.forbidden', 403);
             }
-            // Patient can only cancel or reschedule (re-booking logic separate usually, but maybe status update here)
-            // Ideally reschedule is a separate action creating new appt
             if (req.body.status === 'CANCELLED') {
                 // Check cancellation cutoff time policy here
             }
@@ -91,7 +88,7 @@ exports.updateAppointment = async (req, res, next) => {
             runValidators: true
         });
 
-        res.status(200).json({ success: true, data: appointment });
+        return success(res, 'appointment.updated', appointment);
     } catch (err) {
         next(err);
     }
@@ -100,7 +97,9 @@ exports.updateAppointment = async (req, res, next) => {
 exports.downloadICS = async (req, res, next) => {
     try {
         const appointment = await Appointment.findById(req.params.id);
-        if (!appointment) return res.status(404).json({ success: false, message: 'Appointment not found' });
+        if (!appointment) {
+            return error(res, 'appointment.not_found', 404);
+        }
 
         const icsContent = generateICS(appointment);
 
