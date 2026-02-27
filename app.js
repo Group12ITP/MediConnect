@@ -13,6 +13,7 @@ const pharmacistRoutes = require("./Routes/Pharmacistroutes");
 const patientRoutes = require("./Routes/Patientroutes");
 const pharmacyRoutes = require("./Routes/Pharmacyroutes");
 const inventoryRoutes = require("./Routes/Inventoryroutes");
+const finderRoutes = require("./Routes/Finderroutes");
 
 //Middleware
 app.use(express.json());
@@ -26,6 +27,7 @@ app.use("/api/doctors/search", searchRoutes);
 app.use("/api/doctors/export", exportRoutes);
 app.use("/api/pharmacy/profile", pharmacyRoutes);
 app.use("/api/pharmacy/inventory", inventoryRoutes);
+app.use("/api/prescriptions", finderRoutes);
 
 //Connect to MongoDB
 mongoose
