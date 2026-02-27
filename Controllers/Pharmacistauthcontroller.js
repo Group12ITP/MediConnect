@@ -141,7 +141,7 @@ const login = async (req, res) => {
 // ───────────────────────────────────────────────────────────────
 const getMe = async (req, res) => {
   try {
-    const pharmacist = await Pharmacist.findById(req.user._id).populate("pharmacy");
+    const pharmacist = await Pharmacist.findById(req.user._id);
     return res.status(200).json({ success: true, data: sanitize(pharmacist) });
   } catch (error) {
     console.error("Pharmacist getMe error:", error);

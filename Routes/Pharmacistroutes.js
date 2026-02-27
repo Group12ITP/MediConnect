@@ -17,14 +17,14 @@ const {
   protect,
   restrictTo,
   requireApproved,
-} = require("../Middleware/Authmiddleware");
+} = require("../Middleware/pharmacistauthmiddleware");
 const {
   pharmacistRegisterValidation,
   loginValidation,
   forgotPasswordValidation,
   resetPasswordValidation,
   changePasswordValidation,
-} = require("../Middleware/Validators");
+} = require("../Middleware/pharmacistvalidators");
 
 // ── Public ───────────────────────────────────────────────────────
 router.post("/register", pharmacistRegisterValidation, register);

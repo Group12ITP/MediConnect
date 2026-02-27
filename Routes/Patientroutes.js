@@ -13,7 +13,7 @@ const {
   getAllPatients,
 } = require("../Controllers/Patientauthcontroller");
 
-const { protect, restrictTo } = require("../Middleware/Authmiddleware");
+const { protect, restrictTo } = require("../Middleware/pharmacistauthmiddleware");
 const {
   patientRegisterValidation,
   loginValidation,
@@ -21,7 +21,7 @@ const {
   resetPasswordValidation,
   changePasswordValidation,
   updatePatientValidation,
-} = require("../Middleware/Validators");
+} = require("../Middleware/pharmacistvalidators");
 
 // ── Public ───────────────────────────────────────────────────────
 router.post("/register",        patientRegisterValidation, register);
