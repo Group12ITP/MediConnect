@@ -1,16 +1,9 @@
 const express = require('express');
-const dotenv = require('dotenv');
+const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const i18n = require('i18n');
 const path = require('path');
-const connectDB = require('./Config/db');
-
-// Load env vars
-dotenv.config();
-
-// Connect to database
-connectDB();
 
 const app = express();
 
@@ -23,7 +16,7 @@ i18n.configure({
     syncFiles: true,
     objectNotation: true,        // enables dot-notation keys e.g. "appointment.created"
     queryParameter: 'lang',      // ?lang=si support
-    register: global            // makes __() available globally on req/res
+    register: global             // makes __() available globally on req/res
 });
 
 // ─── Core Middleware ───────────────────────────────────────────────────────────
@@ -39,14 +32,19 @@ app.use(require('./Middleware/i18nMiddleware'));
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/appointments', require('./Routes/appointmentRoutes'));
+app.use('/api/patients/:patientId/reports', require('./Routes/patientReportRoutes'));
+app.use('/api/reports', require('./Routes/reportRoutes'));
 app.use('/api/i18n', require('./Routes/i18nRoutes'));
 
 // ─── Error Handler ────────────────────────────────────────────────────────────
 const errorHandler = require('./Middleware/errorMiddleware');
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+// ─── Connect to MongoDB, then start server ────────────────────────────────────
+mongoose
+    .connect("mongodb+srv://Admin:iaL2kF1B9uLr2zcu@mediconnectcluster.03lembh.mongodb.net/mediconnect")
+    .then(() => {
+        console.log("Connected to MongoDB");
+        app.listen(5000, () => console.log("Server running on port 5000"));
+    })
+    .catch((err) => console.log(err));

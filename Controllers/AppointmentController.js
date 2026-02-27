@@ -12,14 +12,45 @@ exports.createAppointment = async (req, res, next) => {
 
         const appointment = await AppointmentService.createAppointment(req.body);
 
-        return success(res, 'appointment.created', appointment, 201);
+        return success(res, 'appointment.created', {
+            ...appointment.toObject(),
+            appointmentNumber: appointment.queueToken   // surface the daily number clearly
+        }, 201);
     } catch (err) {
         if (err.message === 'Slot already booked') {
             return error(res, 'appointment.slot_already_booked', 409);
         }
+        if (err.message === 'Daily appointment limit reached') {
+            return error(res, 'appointment.daily_limit_reached', 429);
+        }
         next(err);
     }
 };
+
+/**
+ * GET /api/appointments/counter/:doctorId
+ * Returns today's appointment slot usage for a doctor.
+ * Response: { used, remaining, max, isFull, date }
+ */
+exports.getDailyCounter = async (req, res, next) => {
+    try {
+        const { doctorId } = req.params;
+        const { date } = req.query;   // optional — defaults to today (LK timezone)
+
+        const counter = await AppointmentService.getDailyCounter(doctorId, date);
+
+        res.status(200).json({
+            ok: true,
+            message: res.__('common.success'),
+            data: counter,
+            locale: req.locale
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+
 
 exports.getAppointments = async (req, res, next) => {
     try {

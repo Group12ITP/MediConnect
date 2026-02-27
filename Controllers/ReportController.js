@@ -1,7 +1,9 @@
 const ReportService = require('../Services/ReportService');
 const PatientReport = require('../Models/PatientReport');
-const { success } = require('../Utils/response');
+const { success, error } = require('../Utils/response');
+const { referenceRanges } = require('../Utils/healthAnalyser');
 
+// ─── Create Report (auto-analysed) ───────────────────────────────────────────
 exports.createReport = async (req, res, next) => {
     try {
         const { patientId } = req.params;
@@ -9,28 +11,37 @@ exports.createReport = async (req, res, next) => {
 
         const report = await ReportService.createReport(reportData);
 
-        return success(res, 'report.created', report, 201);
+        // Surface the analysis prominently in the response
+        return res.status(201).json({
+            ok: true,
+            message: res.__('report.created'),
+            locale: req.locale,
+            data: {
+                report,
+                analysis: {
+                    level: report.analysis.level,
+                    label: report.analysis.label,
+                    alertPriority: report.analysis.alertPriority,
+                    requiresDoctor: report.analysis.requiresDoctor,
+                    message: report.analysis.message,
+                    advice: report.analysis.advice,
+                    parameters: report.analysis.parameters
+                }
+            }
+        });
     } catch (err) {
+        if (err.message && err.message.startsWith('Missing value')) {
+            return error(res, 'validation.missing_fields', 400, { detail: err.message });
+        }
         next(err);
     }
 };
 
+// ─── Get Reports ─────────────────────────────────────────────────────────────
 exports.getReports = async (req, res, next) => {
     try {
         const { patientId } = req.params;
-        const { latest } = req.query;
-
-        let reports;
-        if (latest === 'true') {
-            const types = ['SUGAR', 'CHOLESTEROL', 'BLOOD_PRESSURE'];
-            reports = [];
-            for (const type of types) {
-                const latestReport = await PatientReport.findOne({ patientId, type }).sort({ createdAt: -1 });
-                if (latestReport) reports.push(latestReport);
-            }
-        } else {
-            reports = await PatientReport.find({ patientId }).sort({ createdAt: -1 });
-        }
+        const reports = await ReportService.getReports(patientId, req.query);
 
         res.status(200).json({
             ok: true,
@@ -42,4 +53,16 @@ exports.getReports = async (req, res, next) => {
     } catch (err) {
         next(err);
     }
+};
+
+// ─── Reference Ranges ─────────────────────────────────────────────────────────
+// GET /api/patients/:patientId/reports/reference
+// Returns the clinical threshold reference table — useful for UI
+exports.getReferenceRanges = (req, res) => {
+    res.status(200).json({
+        ok: true,
+        message: res.__('common.success'),
+        locale: req.locale,
+        data: referenceRanges
+    });
 };
