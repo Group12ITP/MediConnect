@@ -1,23 +1,14 @@
 require('dotenv').config();
 const express = require('express');
-const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs');
 const errorHandler = require('./Middleware/errorHandler');
 
-const authRoutes = require('./Routes/authUserRoutes');
+const authRoutes = require('./Routes/authRoutes');
 const userRoutes = require('./Routes/userRoutes');
 const feedbackRoutes = require('./Routes/feedbackRoutes');
 const ratingRoutes = require('./Routes/ratingRoutes');
 const paymentRoutes = require('./Routes/paymentRoutes');
-
-const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI;
-if (!MONGO_URI) {
-  throw new Error('MONGO_URI is missing. Create a .env file with MONGO_URI and JWT_SECRET.');
-}
-
-const app = express();
 
 const uploadsDir = path.join(__dirname, 'uploads', 'slips');
 if (!fs.existsSync(uploadsDir)) {
@@ -25,6 +16,7 @@ if (!fs.existsSync(uploadsDir)) {
   console.log('Created uploads/slips directory');
 }
 
+const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -51,15 +43,7 @@ app.use((req, res, next) => {
 
 app.use(errorHandler);
 
-mongoose
-  .connect(MONGO_URI)
-  .then(() => console.log('Connected to MongoDB'))
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error(err);
-    process.exit(1);
-  });
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
