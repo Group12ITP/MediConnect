@@ -1,23 +1,13 @@
 const { verifyToken } = require("../Utils/jwtHelper");
-const Doctor      = require("../Models/Doctor");
-const Pharmacist  = require("../Models/Pharmacist");
-const Patient     = require("../Models/Patient");
+const Doctor = require("../Models/Doctor");
 
-// ── Model map: resolve correct model by role ────────────────────
-const MODEL_MAP = {
-  doctor:      Doctor,
-  pharmacist:  Pharmacist,
-  patient:     Patient,
-  admin:       Doctor, // Admins use Doctor model with role:"admin"
-};
-
-// ───────────────────────────────────────────────────────────────
-// protect — Verifies JWT, loads user from correct collection,
-//           attaches to req.user regardless of role
-// ───────────────────────────────────────────────────────────────
+/**
+ * protect – Verifies JWT and attaches doctor to req.doctor
+ * Use on any route that requires authentication
+ */
 const protect = async (req, res, next) => {
   try {
-    // 1. Extract Bearer token
+    // 1. Extract token from Authorization header
     let token;
     if (
       req.headers.authorization &&
@@ -36,63 +26,51 @@ const protect = async (req, res, next) => {
     // 2. Verify token
     const decoded = verifyToken(token);
 
-    // 3. Look up user in the correct collection based on role
-    const Model = MODEL_MAP[decoded.role];
-    if (!Model) {
+    // 3. Check if doctor still exists and is active
+    const doctor = await Doctor.findById(decoded.id).select("+tokenVersion");
+    if (!doctor) {
       return res.status(401).json({
         success: false,
-        message: "Invalid token role.",
+        message: "The account associated with this token no longer exists.",
       });
     }
 
-    const user = await Model.findById(decoded.id).select("+tokenVersion");
-    if (!user) {
+    if (!doctor.isActive) {
       return res.status(401).json({
         success: false,
-        message: "Account no longer exists.",
+        message: "Your account has been deactivated. Please contact support.",
       });
     }
 
-    if (!user.isActive) {
-      return res.status(401).json({
-        success: false,
-        message: "Your account has been deactivated.",
-      });
-    }
-
-    // 4. Token version check (invalidates on logout-all / password change)
-    if (
-      decoded.tokenVersion !== undefined &&
-      decoded.tokenVersion !== user.tokenVersion
-    ) {
+    // 4. Check token version (invalidates tokens after logout-all)
+    if (decoded.tokenVersion !== undefined && decoded.tokenVersion !== doctor.tokenVersion) {
       return res.status(401).json({
         success: false,
         message: "Session expired. Please log in again.",
       });
     }
 
-    // 5. Attach unified user object to req
-    req.user = user;
-    req.user.role = decoded.role; // ensure role is always available
+    // 5. Attach doctor to request
+    req.doctor = doctor;
     next();
   } catch (error) {
     if (error.name === "JsonWebTokenError") {
       return res.status(401).json({ success: false, message: "Invalid token." });
     }
     if (error.name === "TokenExpiredError") {
-      return res.status(401).json({ success: false, message: "Token expired. Please log in again." });
+      return res.status(401).json({ success: false, message: "Token has expired. Please log in again." });
     }
     return res.status(500).json({ success: false, message: "Authentication error." });
   }
 };
 
-// ───────────────────────────────────────────────────────────────
-// restrictTo — Role-based access control
-// Usage: restrictTo("admin", "pharmacist")
-// ───────────────────────────────────────────────────────────────
+/**
+ * restrictTo – Role-based access control
+ * Usage: restrictTo("admin") or restrictTo("admin", "doctor")
+ */
 const restrictTo = (...roles) => {
   return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
+    if (!roles.includes(req.doctor.role)) {
       return res.status(403).json({
         success: false,
         message: `Access denied. Required role(s): ${roles.join(", ")}.`,
@@ -102,18 +80,15 @@ const restrictTo = (...roles) => {
   };
 };
 
-// ───────────────────────────────────────────────────────────────
-// requireApproved — Blocks unapproved pharmacists / doctors
-// Patients don't need approval so this passes them through
-// ───────────────────────────────────────────────────────────────
+/**
+ * requireApproved – Ensures the doctor account is approved by admin
+ * Use AFTER protect middleware
+ */
 const requireApproved = (req, res, next) => {
-  // Patients have no isApproved field — always pass through
-  if (req.user.role === "patient") return next();
-
-  if (req.user.isApproved === false) {
+  if (!req.doctor.isApproved) {
     return res.status(403).json({
       success: false,
-      message: "Your account is pending admin approval.",
+      message: "Your account is pending admin approval. Please wait for confirmation.",
     });
   }
   next();
