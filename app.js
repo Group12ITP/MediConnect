@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const errorHandler = require('./Middleware/errorHandler');
 
-const authRoutes = require('./Routes/authRoutes');
+const authRoutes = require('./Routes/authUserRoutes');
 const userRoutes = require('./Routes/userRoutes');
 const feedbackRoutes = require('./Routes/feedbackRoutes');
 const ratingRoutes = require('./Routes/ratingRoutes');
