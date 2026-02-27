@@ -1,0 +1,35 @@
+{
+  "name": "mediconnect",
+  "version": "1.0.0",
+  "description": "A telemedicine platform connecting patients with healthcare providers in underserved areas under Healthcare Access.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Group12ITP/MediConnect.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Group12ITP/MediConnect/issues"
+  },
+  "homepage": "https://github.com/Group12ITP/MediConnect#readme",
+  "dependencies": {
+    "axios": "^1.13.5",
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.9.0",
+    "dotenv": "^17.3.1",
+    "exceljs": "^4.4.0",
+    "express": "^5.2.1",
+    "express-validator": "^7.3.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.2.1",
+    "multer": "^2.0.2",
+    "nodemailer": "^8.0.1",
+    "nodemon": "^3.1.11",
+    "pdfkit": "^0.17.2"
+  }
+}
