@@ -1,12 +1,25 @@
-const cors = require('cors');
-const helmet = require('helmet');
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs');
 const errorHandler = require('./Middleware/errorHandler');
-const errorHandler2 = require('./Middleware/errorMiddleware');
+const helmet = require('helmet');
+const i18n = require('i18n');
+const cors = require('cors');
+
+// ─── i18n Configuration ───────────────────────────────────────────────────────
+i18n.configure({
+    locales: ['en', 'si', 'ta'],
+    defaultLocale: 'en',
+    directory: path.join(__dirname, 'locales'),
+    autoReload: true,
+    syncFiles: true,
+    objectNotation: true,        // enables dot-notation keys e.g. "appointment.created"
+    queryParameter: 'lang',      // ?lang=si support
+    register: global             // makes __() available globally on req/res
+});
+
 
 
 const authRoutes = require("./Routes/AuthRoutes");
@@ -24,16 +37,10 @@ const paymentRoutes = require('./Routes/paymentRoutes');
 
 
 const app = express();
-
+app.use(i18n.init);
 app.use(helmet());
 app.use(cors());
 
-
-
-
-// Error Handler
-
-app.use(errorHandler2);
 
 const uploadsDir = path.join(__dirname, 'uploads', 'slips');
 if (!fs.existsSync(uploadsDir)) {
@@ -73,11 +80,17 @@ app.use('/api/feedback', feedbackRoutes);
 app.use('/api/ratings', ratingRoutes);
 app.use('/api/payments', paymentRoutes);
 
-app.use('/api/appointments', require('./Routes/appointmentRoutes'));
-
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Telemedicine API is running' });
 });
+
+app.use(require('./Middleware/i18nMiddleware'));
+
+// ─── Routes ───────────────────────────────────────────────────────────────────
+app.use('/api/appointments', require('./Routes/appointmentRoutes'));
+app.use('/api/patients/:patientId/reports', require('./Routes/patientReportRoutes'));
+app.use('/api/reports', require('./Routes/reportRoutes'));
+app.use('/api/i18n', require('./Routes/i18nRoutes'));
 
 // 404 handler for unknown routes (returns JSON instead of HTML)
 app.use((req, res, next) => {
@@ -88,6 +101,9 @@ app.use((req, res, next) => {
 });
 
 app.use(errorHandler);
+
+const errorHandler2 = require('./Middleware/errorMiddleware');
+app.use(errorHandler2);
 
 mongoose
   .connect(
